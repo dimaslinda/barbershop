@@ -142,6 +142,6 @@ Dilisensikan di bawah [MIT License](LICENSE.md).
 
 ## Kontak
 
-Nama - [@username](https://twitter.com/username)
+DimasLinda - [@username](https://github.com/dimaslinda)
 
-Project Link: [https://github.com/username/barbershop](https://github.com/username/barbershop)
+Project Link: [https://github.com/dimaslinda/barbershop](https://github.com/dimaslinda/barbershop)
