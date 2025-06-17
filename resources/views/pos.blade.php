@@ -14,7 +14,28 @@
     <meta name="selected-branch-code" content="{{ $selectedBranchCode ?? '' }}">
 
     <style>
-        /* ... (CSS yang sudah ada) ... */
+        /* ... (CSS yang sudah ada di sini) ... */
+        .add-to-cart-btn {
+            transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+        }
+
+        /* Style untuk tombol yang menunjukkan item sudah ada di keranjang */
+        .add-to-cart-btn.in-cart {
+            background-color: #f59e0b;
+            /* Warna kuning */
+            color: white;
+        }
+
+        .add-to-cart-btn.in-cart:hover {
+            background-color: #d97706;
+            /* Warna kuning gelap saat hover */
+        }
+
+        /* Style untuk tombol yang disabled (misal jika tidak ada cabang valid) */
+        .add-to-cart-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -68,7 +89,7 @@
 
     <script>
         let services = [];
-        let cart = {};
+        let cart = {}; // {service_id: quantity}
         let paymentPollingInterval;
         let currentInvoiceNumber = '';
 
@@ -81,9 +102,6 @@
             updateCartDisplay();
         });
 
-        // ... (fungsi-fungsi JavaScript lainnya seperti fetchServices, renderServices,
-        // attachServiceButtonListeners, handleAddServiceToCart, updateCartDisplay,
-        // updateServiceButtonStates, checkPaymentStatus, event listener pay-button) ...
         async function fetchServices() {
             try {
                 const response = await fetch('/api/services');
@@ -136,12 +154,13 @@
         function handleAddServiceToCart(e) {
             const id = e.target.dataset.id;
 
+            // --- PERBAIKAN DI SINI: Izinkan penambahan berulang ---
             if (cart[id]) {
-                alert('Layanan ini sudah ada di keranjang.');
-                return;
+                cart[id]++; // Tingkatkan kuantitas
             } else {
-                cart[id] = 1;
+                cart[id] = 1; // Tambahkan item baru dengan kuantitas 1
             }
+            // --- AKHIR PERBAIKAN ---
 
             updateCartDisplay();
             updateServiceButtonStates();
@@ -161,7 +180,7 @@
             }
 
             for (const serviceId in cart) {
-                const quantity = 1;
+                const quantity = cart[serviceId]; // PERBAIKAN: Ambil kuantitas dari cart object
                 const service = services.find(s => s.id == serviceId);
                 if (service) {
                     const itemTotal = service.price * quantity;
@@ -170,8 +189,7 @@
                     const cartItemDiv = document.createElement('div');
                     cartItemDiv.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-md mb-2';
                     cartItemDiv.innerHTML = `
-                        <span>${service.name}</span>
-                        <div>
+                        <span>${service.name} x <span class="font-bold">${quantity}</span></span> <div>
                             <span>Rp ${parseFloat(itemTotal).toLocaleString('id-ID')}</span>
                             <button class="remove-from-cart-btn text-red-500 hover:text-red-700 ml-4" data-id="${service.id}">Hapus</button>
                         </div>
@@ -185,7 +203,7 @@
                 button.addEventListener('click', (e) => {
                     const id = e.target.dataset.id;
                     if (cart[id]) {
-                        delete cart[id];
+                        delete cart[id]; // Hapus seluruh item dari keranjang
                     }
                     updateCartDisplay();
                     updateServiceButtonStates();
@@ -197,18 +215,19 @@
             document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 const serviceId = button.dataset.id;
 
-                button.textContent = 'Tambahkan';
-                button.classList.remove('added-to-cart');
-                button.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-black');
-                button.classList.add('bg-green-500', 'hover:bg-green-600', 'text-white');
-
+                // --- PERBAIKAN DI SINI: Sesuaikan teks dan gaya tombol ---
                 if (cart[serviceId]) {
-                    button.textContent = 'Ditambahkan';
-                    button.classList.add('added-to-cart');
-                    button.disabled = true;
+                    button.textContent = `Tambah Lagi (${cart[serviceId]})`; // Tampilkan kuantitas saat ini
+                    button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    button.classList.add('in-cart'); // Gunakan class 'in-cart' untuk styling
                 } else {
-                    button.disabled = false;
+                    button.textContent = 'Tambahkan';
+                    button.classList.remove('in-cart');
+                    button.classList.add('bg-green-500', 'hover:bg-green-600');
                 }
+                // Pastikan tombol selalu aktif (tidak disabled) kecuali ada validasi lain
+                button.disabled = false;
+                // --- AKHIR PERBAIKAN ---
             });
         }
 
@@ -252,13 +271,25 @@
 
             for (const serviceId in cart) {
                 serviceIds.push(parseInt(serviceId));
-                quantities.push(cart[serviceId]);
+                quantities.push(cart[serviceId]); // Kirim kuantitas yang sebenarnya dari keranjang
             }
 
             if (serviceIds.length === 0) {
                 alert('Keranjang belanja kosong. Silakan tambahkan layanan terlebih dahulu.');
                 return;
             }
+
+            // --- PERBAIKAN DI SINI: Validasi client-side untuk branch_id dan kirim ke API ---
+            // selectedBranchId bisa berupa string kosong jika 'null' dari Blade.
+            // selectedBranchCode bisa 'UNASSIGNED'.
+            if (!selectedBranchId || selectedBranchId === 'null' || selectedBranchCode === 'UNASSIGNED') {
+                alert('Tidak dapat membuat transaksi: Akun Anda tidak terhubung ke cabang yang valid.');
+                document.getElementById('pay-button').disabled = false; // Aktifkan kembali tombol
+                document.getElementById('pay-button').textContent = 'Bayar Sekarang (QRIS)';
+                return; // Hentikan eksekusi jika validasi gagal
+            }
+            // --- AKHIR PERBAIKAN ---
+
 
             if (paymentPollingInterval) {
                 clearInterval(paymentPollingInterval);
@@ -277,7 +308,10 @@
                     },
                     body: JSON.stringify({
                         service_ids: serviceIds,
-                        quantities: quantities
+                        quantities: quantities,
+                        // --- PERBAIKAN DI SINI: Kirim selectedBranchId ke API ---
+                        branch_id: selectedBranchId
+                        // --- AKHIR PERBAIKAN ---
                     })
                 });
 

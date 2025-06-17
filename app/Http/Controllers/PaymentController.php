@@ -44,11 +44,12 @@ class PaymentController extends Controller
 
         $branchId = $user->branch ? $user->branch->id : null; // ID cabang user
         $branchCode = $user->branch ? $user->branch->code : 'ADM'; // Kode cabang user, atau 'ADM' untuk admin
+        $branchName = $user->branch ? $user->branch->name : 'Admin Pusat'; // Nama cabang user, atau 'Admin Pusat' untuk admin
 
         try {
             $transaction_id = Str::uuid()->toString();
             // Buat invoice number dengan prefix kode cabang user yang login
-            $invoice_number = strtoupper($branchCode) . '-' . time() . '-' . Str::random(5);
+            $invoice_number = strtoupper($branchName) . '-' . strtoupper($branchCode) . '-' . time() . '-' . Str::random(5);
             $totalAmount = 0;
             $transactionDetails = [];
 
