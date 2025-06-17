@@ -6,26 +6,35 @@ use App\Models\Transaction;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Number;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 
 class TransactionOverview extends BaseWidget
 {
-    // Ini yang akan membuat widget terupdate secara otomatis
-    // '5s' berarti update setiap 5 detik. Anda bisa mengubahnya menjadi '10s' (10 detik), '1m' (1 menit), dll.
     protected static ?string $pollingInterval = '5s';
-
-    // Properti $heading kita biarkan non-static, sesuai dengan error terakhir yang menunjukkan itu non-static di base class Anda.
     protected ?string $heading = 'Ringkasan Transaksi';
 
     protected function getStats(): array
     {
-        // Mendapatkan data transaksi dari database
+        // Karena global scope sudah diterapkan di model Transaction,
+        // query di bawah ini akan secara otomatis memfilter berdasarkan cabang user yang login
+        // kecuali user tersebut adalah admin (isAdmin() = true).
+
         $totalTransactions = Transaction::count();
         $pendingTransactions = Transaction::where('payment_status', 'pending')->count();
         $successfulTransactions = Transaction::where('payment_status', 'success')->count();
         $failedOrExpiredTransactions = Transaction::whereIn('payment_status', ['failed', 'expire', 'cancelled'])->count();
 
-        // Menghitung total pendapatan (hanya dari transaksi sukses)
         $totalRevenue = Transaction::where('payment_status', 'success')->sum('total_amount');
+
+        // Optional: Tambahkan informasi cabang di heading widget jika bukan admin pusat
+        if (Auth::check() && Auth::user()->email !== 'admin@admin.com' && Auth::user()->branch) {
+            $this->heading = 'Ringkasan Transaksi Cabang ' . Auth::user()->branch->name;
+        } else if (Auth::check() && Auth::user()->email === 'admin@admin.com') {
+            $this->heading = 'Ringkasan Transaksi Semua Cabang (Admin)';
+        } else {
+            $this->heading = 'Ringkasan Transaksi (Guest)'; // Fallback jika tidak ada user
+        }
+
 
         return [
             Stat::make('Total Transaksi', Number::format($totalTransactions))

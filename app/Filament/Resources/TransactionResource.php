@@ -22,22 +22,32 @@ class TransactionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
     protected static ?string $navigationGroup = 'Manajemen Penjualan';
-    protected static ?string $modelLabel = 'Transaksi'; // Label di navigasi
+    protected static ?string $modelLabel = 'Transaksi';
+    protected static ?string $pollingInterval = '5s'; // Pastikan ini static string
+    protected ?string $heading = 'Ringkasan Transaksi'; // Pastikan ini non-static string
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('branch_id') // Tambahkan ini
+                    ->relationship('branch', 'name') // Menampilkan nama cabang dari relasi
+                    ->label('Cabang')
+                    ->readOnly() // Cabang tidak bisa diedit setelah transaksi dibuat
+                    ->required(),
                 Forms\Components\TextInput::make('invoice_number')
                     ->label('Nomor Invoice')
-                    ->disabled() // Data ini dihasilkan oleh sistem
-                    ->required(),
+                    ->unique(ignoreRecord: true)
+                    ->readOnly()
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('total_amount')
-                    ->label('Total Pembayaran')
+                    ->label('Jumlah Total')
+                    ->numeric()
                     ->prefix('Rp')
-                    ->disabled(), // Data ini dihitung
+                    ->readOnly(),
                 Forms\Components\TextInput::make('payment_method')
-                    ->disabled(),
+                    ->label('Metode Pembayaran')
+                    ->readOnly(),
                 Forms\Components\Select::make('payment_status')
                     ->label('Status Pembayaran')
                     ->options([
@@ -49,18 +59,25 @@ class TransactionResource extends Resource
                         'challenge' => 'Tantangan',
                         'refunded' => 'Dikembalikan',
                     ])
-                    ->disabled() // Status diupdate oleh webhook
+                    ->readOnly()
                     ->required(),
                 Forms\Components\TextInput::make('midtrans_transaction_id')
                     ->label('ID Transaksi Midtrans')
-                    ->disabled(),
+                    ->maxLength(255)
+                    ->readOnly()
+                    ->helperText('ID unik transaksi dari Midtrans.'),
                 Forms\Components\TextInput::make('midtrans_order_id')
                     ->label('Order ID Midtrans')
-                    ->disabled()
-                    ->required(),
+                    ->maxLength(255)
+                    ->readOnly()
+                    ->helperText('Order ID yang dikirim ke Midtrans.'),
                 Forms\Components\TextInput::make('midtrans_qr_code_url')
                     ->label('URL QR Code')
-                    ->disabled(),
+                    ->maxLength(255)
+                    ->url()
+                    ->readOnly()
+                    ->visibleOn('view')
+                    ->helperText('URL untuk menampilkan QRIS.'),
             ]);
     }
 
@@ -68,6 +85,10 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('branch.code') // Tampilkan kode cabang
+                    ->label('Cabang')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('invoice_number')
                     ->label('No. Invoice')
                     ->searchable()
@@ -87,7 +108,7 @@ class TransactionResource extends Resource
                         'success' => 'success',
                         'failed', 'expire', 'cancelled' => 'danger',
                         'challenge' => 'info',
-                        default => 'secondary', // Untuk status lain yang tidak terdefinisi
+                        default => 'secondary',
                     })
                     ->searchable()
                     ->sortable(),
@@ -102,6 +123,10 @@ class TransactionResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
+                SelectFilter::make('branch_id') // Filter berdasarkan cabang
+                    ->label('Filter Cabang')
+                    ->relationship('branch', 'name')
+                    ->searchable(),
                 SelectFilter::make('payment_status')
                     ->label('Filter Status')
                     ->options([
@@ -134,22 +159,19 @@ class TransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(), // Mungkin dibutuhkan untuk kasus khusus, tetapi umumnya tidak diedit
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(), // Hati-hati dengan menghapus transaksi!
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->emptyStateActions([
-                // Tables\Actions\CreateAction::make(), // Transaksi dibuat dari sisi POS, bukan admin
-            ]);
+            ->emptyStateActions([]);
     }
 
     public static function getRelations(): array
     {
         return [
-            // Ini akan menampilkan detail transaksi di halaman view Transaction
             RelationManagers\TransactionDetailsRelationManager::class,
         ];
     }

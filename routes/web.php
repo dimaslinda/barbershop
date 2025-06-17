@@ -1,10 +1,25 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController; // Pastikan ini di-import
+use Illuminate\Support\Facades\Auth;
 
-Route::get('/', function () {
-    return view('pos');
+// Rute utama aplikasi POS (hanya bisa diakses jika sudah login)
+Route::middleware(['auth:sanctum', 'verified'])->group(function () { // Atau middleware 'auth' Laravel biasa
+    Route::get('/', function () {
+        // Ambil data cabang dari user yang sedang login
+        $userBranch = Auth::user()->branch;
+
+        if (!$userBranch && Auth::user()->email !== 'admin@admin.com') {
+            // Jika user bukan admin dan tidak terhubung ke cabang,
+            // mungkin arahkan ke halaman error atau info
+            return redirect('/admin')->with('error', 'Akun Anda tidak terhubung ke cabang.');
+        }
+
+        return view('pos', [
+            'selectedBranchId' => $userBranch ? $userBranch->id : null,
+            'selectedBranchCode' => $userBranch ? $userBranch->code : 'GLOBAL', // Atau kode default untuk admin
+        ]);
+    })->name('pos.home');
 });
 
 // Ini sudah ada di PaymentController
