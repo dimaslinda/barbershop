@@ -26,7 +26,9 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        // Hapus 'email_verified_at' => 'datetime', jika Anda sudah menghapus kolomnya dari DB.
+        // Jika kolomnya masih ada tapi tidak digunakan untuk verifikasi, biarkan saja.
+        // Jika sudah hapus dari DB, pastikan baris ini dihapus juga.
         'password' => 'hashed',
     ];
 
@@ -36,20 +38,26 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Metode ini harus dinamakan canAccessPanel() sesuai interface FilamentUser.
+     * Ini adalah metode yang menentukan apakah user bisa mengakses panel Filament (Login Berhasil).
+     *
+     * Opsi yang disarankan:
+     * - Izinkan semua user yang memiliki branch_id ATAU user admin untuk login ke panel.
+     * Ini agar akun cabang bisa login ke admin panel Filament untuk diarahkan ke POS.
      */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
+        // Izinkan user login ke panel Filament jika dia admin ATAU jika dia terhubung ke cabang.
         return $this->isAdmin() || ($this->branch_id !== null);
-        // return true;
     }
 
     /**
-     * Metode isAdmin() yang kita definisikan untuk Global Scope.
-     * Sesuaikan logic ini dengan sistem peran Anda.
+     * Metode ini mengidentifikasi user sebagai admin pusat.
      */
     public function isAdmin(): bool
     {
-        return $this->email === 'admin@admin.com'; // Sesuaikan dengan email admin Anda
+        // Logika ini sudah benar untuk identifikasi admin pusat
+        return $this->email === 'admin@admin.com';
+
+        // Pastikan Anda telah MENGHAPUS/mengomentari semua dd() atau log debugging yang ada di metode ini.
     }
 }

@@ -3,30 +3,22 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
-use Illuminate\Support\Facades\Auth; // Import untuk Auth::user()
-use App\Models\User; // Opsional: Untuk type-hinting jika diperlukan, tapi tidak wajib untuk Auth::user()
+use Illuminate\Support\Facades\Auth;
+// use App\Models\User; // Tidak perlu diimport secara eksplisit jika hanya digunakan untuk type-hinting Auth::user()
 
 class Dashboard extends BaseDashboard
 {
     /**
-     * Metode ini menentukan apakah halaman ini bisa diakses.
-     * Harus dideklarasikan sebagai STATIC agar kompatibel dengan Filament\Pages\Page.
-     *
-     * @return bool
+     * Metode ini menentukan apakah halaman Dashboard bisa diakses.
+     * Harus dideklarasikan sebagai STATIC.
+     * Mengembalikan TRUE hanya jika pengguna adalah admin.
      */
-    public static function canAccess(): bool // <-- PERUBAHAN DI SINI: TAMBAHKAN 'static'
+    public static function canAccess(): bool
     {
-        /** @var User|null $user */
-        // Auth::user() dapat diakses di metode static
-        $user = Auth::user();
+        // Pastikan Anda telah MENGHAPUS/mengomentari semua dd() atau log debugging yang ada di metode ini.
 
-        // Jika tidak ada user yang terautentikasi (seharusnya tidak terjadi setelah login), tolak akses.
-        if (!$user) {
-            return false;
-        }
-
-        // Hanya izinkan pengguna yang adalah admin untuk mengakses halaman dashboard ini.
-        // Asumsi metode isAdmin() ada di model App\Models\User.php
-        return $user->isAdmin();
+        // Hanya izinkan user yang adalah admin untuk mengakses halaman dashboard ini.
+        // Jika Auth::user() adalah non-admin, isAdmin() akan FALSE, sehingga akses ditolak.
+        return Auth::user()->isAdmin();
     }
 }
