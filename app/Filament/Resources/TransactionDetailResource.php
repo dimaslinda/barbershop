@@ -29,26 +29,29 @@ class TransactionDetailResource extends Resource
                 Forms\Components\Select::make('transaction_id')
                     ->relationship('transaction', 'invoice_number')
                     ->label('Transaksi (Invoice)')
-                    ->disabled()
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\Select::make('service_id')
                     ->relationship('service', 'name')
                     ->label('Layanan')
-                    ->disabled()
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('quantity')
+                    ->label('Jumlah')
                     ->numeric()
-                    ->disabled()
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('price')
+                    ->label('Harga Satuan')
                     ->numeric()
                     ->prefix('Rp')
-                    ->disabled()
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('subtotal')
+                    ->label('Subtotal')
                     ->numeric()
                     ->prefix('Rp')
-                    ->disabled()
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
             ]);
     }

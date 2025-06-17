@@ -10,15 +10,20 @@ class Dashboard extends BaseDashboard
 {
     /**
      * Metode ini menentukan apakah halaman Dashboard bisa diakses.
-     * Harus dideklarasikan sebagai STATIC.
-     * Mengembalikan TRUE hanya jika pengguna adalah admin.
+     * Hanya admin yang diizinkan mengakses dashboard Filament.
      */
     public static function canAccess(): bool
     {
-        // Pastikan Anda telah MENGHAPUS/mengomentari semua dd() atau log debugging yang ada di metode ini.
+        // Pastikan user sudah login
+        if (!Auth::check()) {
+            return false;
+        }
 
-        // Hanya izinkan user yang adalah admin untuk mengakses halaman dashboard ini.
-        // Jika Auth::user() adalah non-admin, isAdmin() akan FALSE, sehingga akses ditolak.
-        return Auth::user()->isAdmin();
+        // Pastikan user adalah admin
+        if (!Auth::user()->isAdmin()) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -20,23 +20,23 @@ class TransactionDetailsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('service_id')
-                    ->relationship('service', 'name') // Tampilkan nama layanan dari relasi
+                    ->relationship('service', 'name')
                     ->label('Layanan')
-                    ->disabled() // Tidak bisa diedit dari sini
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('quantity')
                     ->numeric()
-                    ->disabled() // Tidak bisa diedit dari sini
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('price')
                     ->numeric()
                     ->prefix('Rp')
-                    ->disabled() // Tidak bisa diedit dari sini
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
                 Forms\Components\TextInput::make('subtotal')
                     ->numeric()
                     ->prefix('Rp')
-                    ->disabled() // Tidak bisa diedit dari sini
+                    ->disabled() // <-- PERBAIKAN DI SINI
                     ->required(),
             ]);
     }

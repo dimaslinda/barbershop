@@ -24,7 +24,7 @@
         @isset($selectedBranchCode)
             <span class="text-blue-600">({{ $selectedBranchCode }})</span>
         @else
-            <span class="text-gray-500">(Cabang Global/Admin)</span>
+            <span class="text-gray-500">(Cabang Tidak Terhubung)</span>
         @endisset
     </h1>
 

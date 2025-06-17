@@ -33,7 +33,7 @@ class TransactionResource extends Resource
                 Forms\Components\Select::make('branch_id') // Tambahkan ini
                     ->relationship('branch', 'name') // Menampilkan nama cabang dari relasi
                     ->label('Cabang')
-                    ->readOnly() // Cabang tidak bisa diedit setelah transaksi dibuat
+                    ->disabled()
                     ->required(),
                 Forms\Components\TextInput::make('invoice_number')
                     ->label('Nomor Invoice')
@@ -47,9 +47,11 @@ class TransactionResource extends Resource
                     ->readOnly(),
                 Forms\Components\TextInput::make('payment_method')
                     ->label('Metode Pembayaran')
+                    ->disabled()
                     ->readOnly(),
                 Forms\Components\Select::make('payment_status')
                     ->label('Status Pembayaran')
+                    ->disabled()
                     ->options([
                         'pending' => 'Pending',
                         'success' => 'Berhasil',
@@ -59,7 +61,6 @@ class TransactionResource extends Resource
                         'challenge' => 'Tantangan',
                         'refunded' => 'Dikembalikan',
                     ])
-                    ->readOnly()
                     ->required(),
                 Forms\Components\TextInput::make('midtrans_transaction_id')
                     ->label('ID Transaksi Midtrans')

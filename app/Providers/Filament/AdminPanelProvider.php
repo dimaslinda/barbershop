@@ -62,22 +62,22 @@ class AdminPanelProvider extends PanelProvider
     }
 
     // --- HAPUS SELURUH METODE authenticated() INI ---
-    public function authenticated(Request $request): ?\Illuminate\Http\RedirectResponse
-    {
-        $user = Auth::user();
-        Log::info('User authenticated: ' . $user->email);
-        $isAdmin = $user->email === 'admin@admin.com';
-        Log::info('Is admin: ' . ($isAdmin ? 'True' : 'False'));
-        if ($isAdmin) {
-            $redirectPath = route('filament.admin.pages.dashboard');
-            Log::info('Redirecting admin to: ' . $redirectPath);
-            return redirect()->to($redirectPath);
-        } else {
-            $redirectPath = route('pos.home');
-            Log::info('Redirecting branch user to: ' . $redirectPath);
-            return redirect()->to($redirectPath);
-        }
-    }
+    // public function authenticated(Request $request): ?\Illuminate\Http\RedirectResponse
+    // {
+    //     $user = Auth::user();
+    //     Log::info('User authenticated: ' . $user->email);
+    //     $isAdmin = $user->email === 'admin@admin.com';
+    //     Log::info('Is admin: ' . ($isAdmin ? 'True' : 'False'));
+    //     if ($isAdmin) {
+    //         $redirectPath = route('filament.admin.pages.dashboard');
+    //         Log::info('Redirecting admin to: ' . $redirectPath);
+    //         return redirect()->to($redirectPath);
+    //     } else {
+    //         $redirectPath = route('pos.home');
+    //         Log::info('Redirecting branch user to: ' . $redirectPath);
+    //         return redirect()->to($redirectPath);
+    //     }
+    // }
     // --- AKHIR HAPUS authenticated() ---
 
 
@@ -88,20 +88,9 @@ class AdminPanelProvider extends PanelProvider
     // public function getLoginRedirectUrl(): string
     // {
     //     $user = Auth::user();
-
-    //     // --- DEBUGGING DIMULAI DI SINI ---
-    //     Log::info('getLoginRedirectUrl called. User: ' . $user->email);
-    //     Log::info('Is admin (from getLoginRedirectUrl): ' . ($user->isAdmin() ? 'True' : 'False'));
-    //     // --- DEBUGGING BERAKHIR DI SINI ---
-
     //     if ($user->isAdmin()) {
-    //         // Admin ke dashboard Filament
-    //         Log::info('Redirecting admin to dashboard.'); // Log tujuan redirect
     //         return route('filament.admin.pages.dashboard');
     //     }
-
-    //     // Akun cabang ke halaman POS depan
-    //     Log::info('Redirecting non-admin to POS home.'); // Log tujuan redirect
     //     return route('pos.home');
     // }
 }

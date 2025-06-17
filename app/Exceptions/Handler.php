@@ -12,13 +12,10 @@ class Handler extends ExceptionHandler
 
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        dd('Caught unauthenticated exception!');
         if ($request->expectsJson()) {
             return response()->json(['message' => $exception->getMessage()], 401);
         }
 
-        // --- UBAH BARIS INI ---
-        // Ganti 'filament.admin.auth.login' dengan NAMA RUTE YANG ANDA TEMUKAN
-        return redirect()->guest(route('filament.admin.auth.login'));
+        return redirect()->guest(route('login'));
     }
 }

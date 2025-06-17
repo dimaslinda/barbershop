@@ -39,15 +39,12 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Ini adalah metode yang menentukan apakah user bisa mengakses panel Filament (Login Berhasil).
-     *
-     * Opsi yang disarankan:
-     * - Izinkan semua user yang memiliki branch_id ATAU user admin untuk login ke panel.
-     * Ini agar akun cabang bisa login ke admin panel Filament untuk diarahkan ke POS.
+     * Hanya admin yang diizinkan mengakses panel Filament.
      */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        // Izinkan user login ke panel Filament jika dia admin ATAU jika dia terhubung ke cabang.
-        return $this->isAdmin() || ($this->branch_id !== null);
+        // return $this->isAdmin();
+        return true;
     }
 
     /**

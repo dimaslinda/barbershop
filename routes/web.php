@@ -1,30 +1,52 @@
 <?php
 
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Service; // Pastikan ini ada jika digunakan di rute API
 
-// Rute utama aplikasi POS (hanya bisa diakses jika sudah login)
-Route::middleware(['auth:sanctum', 'verified'])->group(function () { // Atau middleware 'auth' Laravel biasa
+require __DIR__ . '/auth.php'; // Memuat rute autentikasi Laravel Breeze
+
+// --- GRUP RUTE UNTUK WEB YANG MEMBUTUHKAN AUTENTIKASI SESI ---
+// Pengguna harus login (melalui Breeze) untuk mengakses halaman ini.
+Route::middleware(['auth'])->group(function () {
+
+    // Ini adalah rute default Breeze setelah login.
+    // Kita arahkan semua user yang landas di sini ke pos.home.
+    // Pemisahan admin/non-admin ditangani oleh getLoginRedirectUrl() di AdminPanelProvider.
+    Route::get('/dashboard', function () {
+        return redirect()->route('pos.home');
+    })->name('dashboard');
+
+    // Rute utama aplikasi POS
     Route::get('/', function () {
-        // Ambil data cabang dari user yang sedang login
-        $userBranch = Auth::user()->branch;
+        $user = Auth::user();
 
-        if (!$userBranch && Auth::user()->email !== 'admin@admin.com') {
-            // Jika user bukan admin dan tidak terhubung ke cabang,
-            // mungkin arahkan ke halaman error atau info
-            return redirect('/admin')->with('error', 'Akun Anda tidak terhubung ke cabang.');
-        }
+        // --- PERBAIKAN: Seluruh blok validasi `if (!$user->branch)` DIHAPUS DARI SINI ---
+        // Dengan ini, semua user yang login akan bisa mengakses halaman POS.
+        // Penanganan user tanpa cabang (misal admin pusat atau user yang tidak terhubung)
+        // akan dilakukan di view pos.blade.php dan di PaymentController untuk aksi pembuatan transaksi.
 
         return view('pos', [
-            'selectedBranchId' => $userBranch ? $userBranch->id : null,
-            'selectedBranchCode' => $userBranch ? $userBranch->code : 'GLOBAL', // Atau kode default untuk admin
+            // selectedBranchId dan selectedBranchCode akan null jika $user->branch null
+            'selectedBranchId' => $user->branch ? $user->branch->id : null,
+            'selectedBranchCode' => $user->branch ? $user->branch->code : 'UNASSIGNED', // Placeholder jika tidak ada cabang
         ]);
     })->name('pos.home');
 });
 
-// Ini sudah ada di PaymentController
-// Route::get('/payment/success/{invoice_number}', [PaymentController::class, 'paymentSuccess']);
-// Route::get('/payment/failed/{invoice_number}', [PaymentController::class, 'paymentFailed']);
-// Route::get('/payment/pending/{invoice_number}', [PaymentController::class, 'paymentPending']);
+// --- Rute Callback Midtrans (Tidak Membutuhkan Autentikasi) ---
+Route::get('/payment/success/{invoice_number}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+Route::get('/payment/failed/{invoice_number}', [PaymentController::class, 'paymentFailed'])->name('payment.failed');
+Route::get('/payment/pending/{invoice_number}', [PaymentController::class, 'paymentPending'])->name('payment.pending');
 
-// ... rute Filament admin
+// --- Rute API (Membutuhkan Autentikasi Web/Sesi) ---
+Route::middleware(['auth:web'])->group(function () {
+    Route::post('/api/create-qris-transaction', [PaymentController::class, 'createTransaction']);
+    Route::get('/api/services', function () {
+        return response()->json(Service::where('is_active', true)->get());
+    });
+    Route::get('/api/transaction-status/{invoice_number}', [App\Http\Controllers\PaymentController::class, 'getTransactionStatus']);
+});
+
+// Rute admin Filament secara otomatis terdaftar oleh AdminPanelProvider.

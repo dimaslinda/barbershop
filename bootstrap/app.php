@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Ini adalah bagian yang perlu diubah:
-        $middleware->redirectGuestsTo(fn(string $guard) => route('filament.admin.auth.login'));
+        // $middleware->redirectGuestsTo(fn(string $guard) => route('filament.admin.auth.login'));
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // Pastikan 'admin' adalah ID panel Filament Anda.
         // Jika ID panel Anda berbeda, ubah 'filament.admin.auth.login'
