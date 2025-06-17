@@ -2,22 +2,25 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Pages;
-use Filament\Panel;
-use Filament\Widgets;
-use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Http\Middleware\Authenticate;
-use App\Filament\Widgets\TransactionOverview;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Filament\Http\Middleware\AuthenticateSession;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Filament\Pages;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Widgets\TransactionOverview;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -48,13 +51,38 @@ class AdminPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
+                VerifyCsrfToken::class,
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    public function authenticated(Request $request): ?\Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        // --- DEBUGGING DIMULAI DI SINI ---
+        // Menampilkan email user yang login
+        Log::info('User authenticated: ' . $user->email);
+
+        // Menampilkan hasil pengecekan admin
+        $isAdmin = $user->email === 'admin@admin.com';
+        Log::info('Is admin: ' . ($isAdmin ? 'True' : 'False'));
+
+        // Menampilkan redirect path yang akan digunakan
+        if ($isAdmin) {
+            $redirectPath = route('filament.admin.pages.dashboard');
+            Log::info('Redirecting admin to: ' . $redirectPath);
+            return redirect()->to($redirectPath);
+        } else {
+            $redirectPath = route('pos.home');
+            Log::info('Redirecting branch user to: ' . $redirectPath);
+            return redirect()->to($redirectPath);
+        }
+        // --- DEBUGGING BERAKHIR DI SINI ---
     }
 }

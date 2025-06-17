@@ -40,7 +40,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        return $this->isAdmin();
+        return $this->isAdmin() || ($this->branch_id !== null);
         // return true;
     }
 
